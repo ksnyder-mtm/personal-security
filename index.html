@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Security Self-Assessment Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .question-option:hover {
+            background-color: #e0f2fe;
+        }
+        .sub-question-group {
+            padding: 1rem;
+            border: 1px solid #e2e8f0; /* slate-200 */
+            border-radius: 0.5rem; /* rounded-lg */
+            margin-bottom: 1rem;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .sub-question-group legend {
+            font-weight: 500; /* medium */
+            color: #334155; /* slate-700 */
+        }
+        .radio-option-label, .checkbox-option-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border: 1px solid #cbd5e1; /* slate-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .radio-option-label:hover, .checkbox-option-label:hover {
+            background-color: #e0f2fe;
+        }
+        .radio-option-label.selected, .checkbox-option-label.selected {
+            background-color: #bfdbfe; /* sky-200 */
+            border-color: #38bdf8; /* sky-500 */
+        }
+
+        /* Risk level styling for category headers on main page */
+        .risk-high-bg { background-color: #fee2e2; border-left-color: #dc2626 !important; }
+        .risk-medium-bg { background-color: #ffedd5; border-left-color: #f97316 !important; }
+        .risk-limited-bg { background-color: #dcfce7; border-left-color: #16a34a !important; }
+        .risk-text-high { color: #991b1b; }
+        .risk-text-medium { color: #c2410c; }
+        .risk-text-limited { color: #15803d; }
+
+        /* Severity label styling for individual recommendations on main page */
+        .severity-critical { background-color: #b91c1c; color: white; }
+        .severity-high { background-color: #dc2626; color: white; }
+        .severity-medium { background-color: #ea580c; color: white; }
+        .severity-low { background-color: #facc15; color: black; }
+        .severity-label {
+             display: inline-block;
+             padding: 0.25rem 0.6rem;
+             font-size: 0.75rem;
+             font-weight: 500;
+             border-radius: 9999px;
+             margin-left: 0.5rem;
+             vertical-align: middle;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* Print-specific styles for the main window (fallback if new window fails, less critical now) */
+        @media print {
+            body > *:not(#results-section-printable) {
+                display: none !important; /* Hide everything except a potential dedicated printable area if new window fails */
+            }
+            #results-section-printable { /* If we were to use a dedicated printable div in main page */
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+
+        <header id="header-nav" class="mb-8 text-center">
+            </header>
+
+        <section id="introduction-section" class="bg-white p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-2xl font-semibold text-sky-600 mb-4">Welcome!</h2>
+            <p class="mb-3">This tool works best on a desktop computer.</p>
+            <p class="mb-3">This digital security self-assessment is designed to help you evaluate your current practices and identify areas for improvement. Whether you are working in advocacy, research, public policy, or other fields that involve sensitive topics, you may face increased risks such as online harassment, doxxing, and other digital threats.</p>
+            <p class="mb-3">This assessment will guide you through key aspects of digital safety. Based on your responses, you will receive personalized recommendations. Remember, your organization offers resources to support your security, including IT support, Microsoft 365, Signal, 1Password, and Kanary Copilot.</p>
+            <p class="mb-3 text-sm text-slate-500"><strong>Privacy Note:</strong> This assessment is entirely client-side. Your answers are processed in your browser and are not stored or transmitted anywhere.</p>
+            <div id="start-button-container" class="text-center mt-6">
+                <button id="start-assessment-btn" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-150 ease-in-out">
+                    Start Assessment
+                </button>
+            </div>
+        </section>
+
+        <div id="progress-bar-container" class="hidden mb-6 sticky top-0 bg-slate-100 py-2 z-10 shadow-sm">
+            <div class="w-full bg-slate-300 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-sky-600 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+            </div>
+            <p id="progress-text" class="text-sm text-center text-slate-500 mt-1">Step 0 of 0</p>
+        </div>
+
+        <section id="questionnaire-section" class="hidden bg-white p-6 rounded-lg shadow-lg mb-8">
+            <div id="question-container">
+                </div>
+            <div class="mt-8 flex justify-between">
+                <button id="prev-question-btn" class="bg-slate-400 hover:bg-slate-500 text-slate-800 font-semibold py-2 px-5 rounded-lg shadow transition duration-150 ease-in-out hidden">
+                    Previous
+                </button>
+                <button id="next-question-btn" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-2 px-5 rounded-lg shadow transition duration-150 ease-in-out">
+                    Next
+                </button>
+            </div>
+        </section>
+
+        <section id="results-section" class="hidden bg-white p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-2xl font-semibold text-sky-600 mb-4 border-b border-slate-200 pb-3">Your Security Assessment Results</h2>
+            <div id="results-summary" class="mb-6">
+                </div>
+            <h3 class="text-xl font-semibold text-sky-600 mb-4">Recommendations by Category:</h3>
+            <div id="recommendations-container" class="space-y-6">
+                </div>
+            <p class="mt-8 text-sm text-slate-600 italic disclaimer-paragraph">
+                <strong>Disclaimer:</strong> This tool provides general guidance based on your responses. It is not exhaustive security advice. For specific security concerns, incidents, or further assistance with implementing these recommendations (including platform-specific steps mentioned in your organization's DIY Privacy Guide), please contact your organization's IT support.
+            </p>
+            <div id="action-buttons-container" class="mt-10 text-center space-x-2 sm:space-x-3">
+                 <button id="print-results-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-4 sm:px-5 rounded-lg shadow transition duration-150 ease-in-out">
+                    Print Results
+                </button>
+                <button id="reset-assessment-btn" class="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 px-4 sm:px-5 rounded-lg shadow transition duration-150 ease-in-out">
+                    Start Over
+                </button>
+            </div>
+        </section>
+
+        <footer id="footer" class="text-center text-sm text-slate-500 mt-12 pb-6">
+            <p>Promoting a safer digital environment.</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- DATA STRUCTURES ---
+        const assessmentSteps = [
+            {
+                id: 'personal_exposure',
+                title: 'Personal Information Exposure',
+                instructions: 'These questions assess how much of your personal information might be publicly available.',
+                type: 'grouped_radio',
+                sub_questions: [
+                    { id: 'home_address_findable', text: 'Is your home address findable online?', rec_map: { 'yes': ['rec_home_address_yes'], 'unsure': ['rec_home_address_unsure'] } },
+                    { id: 'personal_phone_available', text: 'Is your personal phone number available online?', rec_map: { 'yes': ['rec_personal_phone_yes'], 'unsure': ['rec_personal_phone_unsure'] } },
+                    { id: 'family_info_discoverable', text: 'Is information about your family easily discoverable online?', rec_map: { 'yes': ['rec_family_info_yes'], 'unsure': ['rec_family_info_unsure'] } },
+                    // Updated question text and recommendation mapping for bio_info
+                    { id: 'bio_info_contains_pii', text: 'Does your public bio (e.g., on your organization’s website, LinkedIn, or other platforms) contain personal information that could be used to identify, contact, or target you?', rec_map: { 'yes': ['rec_bio_contains_pii_yes'], 'unsure': ['rec_bio_contains_pii_unsure'] } }
+                ],
+                options: [ { text: 'Yes', value: 'yes' }, { text: 'No', value: 'no' }, { text: 'Unsure', value: 'unsure' } ],
+                org_tool_mention: ['Kanary Copilot']
+            },
+            {
+                id: 'social_media_usage',
+                title: 'Social Media Usage',
+                instructions: 'Select the social media platforms you use.',
+                type: 'checkbox_select',
+                platforms: [
+                    { id: 'facebook', label: 'Facebook' }, { id: 'instagram', label: 'Instagram' },
+                    { id: 'twitter', label: 'X / Twitter' }, { id: 'tiktok', label: 'TikTok' },
+                    { id: 'bluesky', label: 'Bluesky' }, { id: 'linkedin', label: 'LinkedIn' }
+                ]
+            },
+            {
+                id: 'social_media_privacy',
+                title: 'Social Media Privacy Settings',
+                instructions: 'For each platform you use, have you implemented key privacy and security settings?',
+                type: 'conditional_grouped_radio',
+                source_question_id: 'social_media_usage',
+                platform_details: {
+                    'facebook': { text_template: 'Have you implemented privacy settings on your Facebook account?', rec_map: { 'no': ['rec_facebook_risk'], 'unsure': ['rec_facebook_risk'] } },
+                    'instagram': { text_template: 'Have you implemented privacy settings on your Instagram account?', rec_map: { 'no': ['rec_instagram_risk'], 'unsure': ['rec_instagram_risk'] } },
+                    'twitter': { text_template: 'Have you implemented privacy settings on your X / Twitter account?', rec_map: { 'no': ['rec_twitter_risk'], 'unsure': ['rec_twitter_risk'] } },
+                    'tiktok': { text_template: 'Have you implemented privacy settings on your TikTok account?', rec_map: { 'no': ['rec_tiktok_risk'], 'unsure': ['rec_tiktok_risk'] } },
+                    'bluesky': { text_template: 'Have you implemented privacy settings on your Bluesky account?', rec_map: { 'no': ['rec_bluesky_risk'], 'unsure': ['rec_bluesky_risk'] } },
+                    'linkedin': { text_template: 'Have you implemented privacy settings on your LinkedIn account?', rec_map: { 'no': ['rec_linkedin_risk'], 'unsure': ['rec_linkedin_risk'] } }
+                },
+                options: [ { text: 'Yes', value: 'yes' }, { text: 'No', value: 'no' }, { text: 'Unsure', value: 'unsure' } ]
+            },
+            {
+                id: 'phone_security',
+                title: 'Phone Security',
+                instructions: 'These questions evaluate the security settings on your mobile device.',
+                type: 'grouped_radio',
+                sub_questions: [
+                    { id: 'lockdown_mode_enabled', text: 'Have you enabled Lockdown Mode (iOS) or enhanced security features on your phone (such as maximum security settings)?', rec_map: { 'no': ['rec_lockdown_mode_no'], 'unsure': ['rec_lockdown_mode_unsure'] } },
+                    { id: 'location_services_disabled', text: 'Have you disabled Location Services for non-essential apps?', rec_map: { 'no': ['rec_location_services_no'], 'unsure': ['rec_location_services_unsure'] } },
+                    { id: 'app_permissions_reviewed', text: 'Have you reviewed and restricted app permissions on your phone?', rec_map: { 'no': ['rec_app_permissions_no'], 'unsure': ['rec_app_permissions_unsure'] } },
+                    { id: 'secure_screen_lock_used', text: 'Do you use a secure screen lock with a short timeout on your phone?', rec_map: { 'no': ['rec_screen_lock_no'], 'unsure': ['rec_screen_lock_unsure'] } }
+                ],
+                options: [ { text: 'Yes', value: 'yes' }, { text: 'No', value: 'no' }, { text: 'Unsure', value: 'unsure' } ]
+            },
+            {
+                id: 'account_security',
+                title: 'Account Security',
+                instructions: 'These questions assess how you manage your online accounts and login credentials.',
+                type: 'grouped_radio',
+                sub_questions: [
+                    { id: 'unique_passwords_used', text: 'Do you use unique passwords for each important account (email, banking, work, social media)?', rec_map: { 'no': ['rec_unique_passwords_no'], 'unsure': ['rec_unique_passwords_unsure'] } },
+                    { id: 'org_1password_used', text: 'Do you use your organization\'s 1Password service?', rec_map: { 'no': ['rec_org_1password_no'], 'unsure': ['rec_org_1password_unsure'] } },
+                    { id: '2fa_used_critical', text: 'Do you use two-factor authentication (2FA) for critical accounts (email, banking, work accounts)?', rec_map: { 'no': ['rec_2fa_critical_no'], 'unsure': ['rec_2fa_critical_unsure'] } }
+                ],
+                options: [ { text: 'Yes', value: 'yes' }, { text: 'No', value: 'no' }, { text: 'Unsure', value: 'unsure' } ],
+                org_tool_mention: ['1Password', 'Microsoft 365 / Entra ID']
+            },
+            {
+                id: 'communication_security',
+                title: 'Communication Security',
+                instructions: 'These questions evaluate how you communicate with colleagues and external partners.',
+                type: 'grouped_radio',
+                sub_questions: [
+                    { id: 'signal_used_sensitive', text: 'Do you use Signal for sensitive communications (discussing work details, personal information, or topics that could put you at risk)?', rec_map: { 'no': ['rec_signal_sensitive_no'], 'unsure': ['rec_signal_sensitive_unsure'] } },
+                    { id: 'video_call_precautions', text: 'Do you take precautions during video calls (background, visible information)?', rec_map: { 'no': ['rec_video_precautions_no'], 'unsure': ['rec_video_precautions_unsure'] } }
+                    // Removed metadata question
+                ],
+                options: [ { text: 'Yes', value: 'yes' }, { text: 'No', value: 'no' }, { text: 'Unsure', value: 'unsure' } ],
+                org_tool_mention: ['Signal']
+            },
+            {
+                id: 'collaboration_security',
+                title: 'Collaboration Security Practices',
+                instructions: 'These questions assess how you share information when collaborating.',
+                type: 'grouped_radio',
+                sub_questions: [
+                    { id: 'collab_share_email_external', text: 'Do you regularly share documents via email with external collaborators?', rec_map: { 'yes': ['rec_collab_email_external_risky'], 'unsure': ['rec_collab_email_external_risky'] } },
+                    { id: 'collab_attachments_vs_links', text: 'When sharing documents via email, do you primarily use attachments rather than secure links?', rec_map: { 'yes': ['rec_collab_attachments_risky'], 'unsure': ['rec_collab_attachments_risky'] } },
+                    { id: 'collab_sensitive_messaging_apps', text: 'Do you or your team members sometimes share potentially sensitive documents through messaging apps (e.g., WhatsApp, Slack, Teams)?', rec_map: { 'yes': ['rec_collab_sensitive_messaging_risky'], 'unsure': ['rec_collab_sensitive_messaging_risky'] } },
+                    { id: 'collab_emails_encrypted', text: 'Are emails containing sensitive information always encrypted before being sent?', rec_map: { 'no': ['rec_collab_email_encrypted_missing'], 'unsure': ['rec_collab_email_encrypted_missing'] } }
+                ],
+                options: [ { text: 'Yes', value: 'yes' }, { text: 'No', value: 'no' }, { text: 'Unsure', value: 'unsure' } ],
+                org_tool_mention: ['Microsoft OneDrive', 'Google Drive']
+            },
+            {
+                id: 'browser_security',
+                title: 'Browser Security',
+                instructions: 'These questions evaluate your web browsing security practices.',
+                type: 'grouped_radio',
+                sub_questions: [
+                    { id: 'browser_extensions_reviewed', text: 'Have you reviewed and removed unnecessary browser extensions?', rec_map: { 'no': ['rec_browser_extensions_no'], 'unsure': ['rec_browser_extensions_unsure'] } },
+                    { id: 'browser_security_settings', text: 'Have you enabled security features in your browser (like blocking dangerous downloads, enabling safe browsing)?', rec_map: { 'no': ['rec_browser_security_no'], 'unsure': ['rec_browser_security_unsure'] } },
+                    { id: 'browser_password_manager', text: 'Do you use your browser\'s built-in password manager or a dedicated password manager instead of saving passwords in multiple browsers?', rec_map: { 'no': ['rec_browser_password_no'], 'unsure': ['rec_browser_password_unsure'] } },
+                    { id: 'browser_private_browsing', text: 'Do you use private/incognito browsing when researching sensitive topics or accessing accounts on shared devices?', rec_map: { 'no': ['rec_browser_private_no'], 'unsure': ['rec_browser_private_unsure'] } }
+                ],
+                options: [ { text: 'Yes', value: 'yes' }, { text: 'No', value: 'no' }, { text: 'Unsure', value: 'unsure' } ]
+            },
+            {
+                id: 'software_updates',
+                title: 'Software Updates & Maintenance',
+                instructions: 'These questions assess how you keep your devices and software secure and up-to-date.',
+                type: 'grouped_radio',
+                sub_questions: [
+                    { id: 'os_updates_enabled', text: 'Do you have automatic updates enabled for your operating system (Windows, macOS, etc.)?', rec_map: { 'no': ['rec_os_updates_no'], 'unsure': ['rec_os_updates_unsure'] } },
+                    { id: 'app_updates_regular', text: 'Do you regularly update your applications and software?', rec_map: { 'no': ['rec_app_updates_no'], 'unsure': ['rec_app_updates_unsure'] } },
+                    { id: 'antivirus_updated', text: 'If you use antivirus software, is it kept up-to-date with current definitions?', rec_map: { 'no': ['rec_antivirus_no'], 'unsure': ['rec_antivirus_unsure'] } },
+                    { id: 'unused_software_removed', text: 'Do you regularly remove or uninstall software and apps you no longer use?', rec_map: { 'no': ['rec_unused_software_no'], 'unsure': ['rec_unused_software_unsure'] } }
+                ],
+                options: [ { text: 'Yes', value: 'yes' }, { text: 'No', value: 'no' }, { text: 'Unsure', value: 'unsure' } ]
+            }
+        ];
+
+        const recommendations = {
+            // Personal Information Exposure - Texts updated to match user's latest prompt
+            'rec_home_address_yes': { title: 'Home Address Findable Online (Action Needed)', text: 'Use a service like Kanary (available through your organization) to request the removal of your address from people-search sites (like Whitepages, Spokeo, Radaris).', severity: 'High', category: 'Personal Information Exposure' },
+            'rec_home_address_unsure': { title: 'Home Address Findable Online (Verify)', text: 'If unsure, search for your name and address in an incognito browser window. Use Kanary for any exposed data you find.', severity: 'Medium', category: 'Personal Information Exposure' },
+            'rec_personal_phone_yes': { title: 'Personal Phone Available Online (Action Needed)', text: 'Use Kanary to request removal. If listed on social media, update privacy settings to hide your phone number.', severity: 'High', category: 'Personal Information Exposure' },
+            'rec_personal_phone_unsure': { title: 'Personal Phone Available Online (Verify)', text: 'Search for your phone number in an incognito browser. Use Kanary for any exposed listings.', severity: 'Medium', category: 'Personal Information Exposure' },
+            'rec_family_info_yes': { title: 'Family Information Discoverable (Action Needed)', text: 'Avoid posting family details on public profiles. Consider signing up family members with Kanary as well to minimize public exposure.', severity: 'High', category: 'Personal Information Exposure' },
+            'rec_family_info_unsure': { title: 'Family Information Discoverable (Verify)', text: "Search your family members' names with your last name in an incognito browser. If the answer is yes, consider signing up family members with Kanary as well to minimize public exposure.", severity: 'Medium', category: 'Personal Information Exposure' },
+            // New recommendations for the updated bio question
+            'rec_bio_contains_pii_yes': { title: 'Public Bio Contains PII (Action Needed)', text: 'Review and remove personal details (like home address, phone number, or family references) from any public bios, such as organizational website, personal blog, LinkedIn. Request that your organization removes personal information from the website, ensure that you remove personal information from your blog and edit the contact section of your LinkedIn profile (LinkedIn instructions - <a href="https://www.linkedin.com/help/linkedin/answer/a570132/editing-the-contact-info-section-of-your-profile" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:text-sky-700 underline">Editing Contact Info</a>).', severity: 'High', category: 'Personal Information Exposure' },
+            'rec_bio_contains_pii_unsure': { title: 'Public Bio Contains PII (Verify & Review)', text: 'Check to see whether personal information is available on any public bios (organizational website, personal blog, LinkedIn). If information is available, review and remove personal details (like home address, phone number, or family references) from public bios. Request that your organization removes personal information from the website, ensure that you remove personal information from your blog and edit the contact section of your LinkedIn profile (LinkedIn instructions - <a href="https://www.linkedin.com/help/linkedin/answer/a570132/editing-the-contact-info-section-of-your-profile" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:text-sky-700 underline">Editing Contact Info</a>).', severity: 'Medium', category: 'Personal Information Exposure' },
+            
+            // Google PII Removal - Link and text verified
+            'rec_google_search_pii': { title: 'Google Search: PII Removal', text: 'Request removals. Resource: <a href="https://support.google.com/websearch/answer/9673730" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:text-sky-700 underline">Remove personally identifiable info or doxxing content from Google Search (and Removal Request form)</a>.', severity: 'High', category: 'Online Footprint' },
+
+            // Social Media - Texts and Links updated as per user's latest prompt
+            'rec_facebook_risk': { title: 'Facebook: Secure Your Account', text: 'Change your Facebook profile settings; limit past posts; remove phone/email. Resource: <a href="https://youtu.be/ROlgC5cyk-o?si=v220OJZp2UsdhCD_" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:text-sky-700 underline">How to Make Your Facebook Profile Private in 2025 (video 3.34m)</a>.', severity: 'High', category: 'Social Media Security' },
+            'rec_twitter_risk': { title: 'X / Twitter: Secure Your Account', text: 'Protect your Tweets; disable location; remove phone/email. Resource: <a href="https://www.internetmatters.org/parental-controls/social-media/twitter/" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:text-sky-700 underline">X (formerly Twitter) safety</a>.', severity: 'High', category: 'Social Media Security' },
+            'rec_instagram_risk': { title: 'Instagram: Secure Your Account', text: 'Switch to Private account; review followers. Resource: <a href="https://www.consumerreports.org/electronics-computers/privacy/instagram-privacy-settings-a3036233134/" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:text-sky-700 underline">Instagram Privacy Settings You Should Change Right Now</a>.', severity: 'High', category: 'Social Media Security' },
+            'rec_linkedin_risk': { title: 'LinkedIn: Secure Your Account', text: 'Hide profile from search engines; hide contact info. Resources: <a href="https://linkedin.com/help/linkedin/answer/a548106" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:text-sky-700 underline">Manage your profile’s visibility on and off LinkedIn</a> and <a href="https://www.youtube.com/watch?v=CnyeVORN0AY" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:text-sky-700 underline">How to Hide Your LinkedIn Profile from Search Engines (video 1.27m)</a>.', severity: 'High', category: 'Social Media Security' },
+            'rec_bluesky_risk': { title: 'Bluesky: Understand Visibility', text: 'Adjust logged-out visibility. Note that Bluesky is a public network—you can only limit visibility to non-logged in users (Profile>> Privacy & Security). Posts are visible to any user. Be mindful of posts that include personal information, such as family, home.', severity: 'Medium', category: 'Social Media Security' },
+            'rec_tiktok_risk': { title: 'TikTok: Secure Your Account', text: 'Adjust public/private, location and post privacy settings. Resources: <a href="https://support.tiktok.com/en/account-and-privacy/account-privacy-settings/making-your-account-public-or-private" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:text-sky-700 underline">Choosing between a public/private account</a>, <a href="https://support.tiktok.com/en/account-and-privacy/account-privacy-settings/location-services-on-tiktok" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:text-sky-700 underline">Location information on TikTok</a>, <a href="https://support.tiktok.com/en/account-and-privacy/account-privacy-settings/video-visibility" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:text-sky-700 underline">Post privacy settings</a>.', severity: 'High', category: 'Social Media Security' },
+
+            // Phone Security - Texts updated to match user's latest prompt
+            'rec_lockdown_mode_no': { title: 'Phone Security: Enable Enhanced Features (Action Needed)', text: 'Enable Lockdown Mode on iOS (Settings > Privacy & Security > Lockdown Mode) or use a similar high-security mode on Android.', severity: 'High', category: 'Phone Security' },
+            'rec_lockdown_mode_unsure': { title: 'Phone Security: Enable Enhanced Features (Verify)', text: 'If unsure, check your phone’s security settings and enable the most secure mode available.', severity: 'Medium', category: 'Phone Security' },
+            'rec_location_services_no': { title: 'Phone Security: Disable Unneeded Location Services (Action Needed)', text: "Go to your phone's settings, find \"Location Services,\" and disable it for apps that don’t need location access.", severity: 'High', category: 'Phone Security' },
+            'rec_location_services_unsure': { title: 'Phone Security: Disable Unneeded Location Services (Verify)', text: 'If unsure, review your app permissions and disable location for non-essential apps.', severity: 'Medium', category: 'Phone Security' },
+            'rec_app_permissions_no': { title: 'Phone Security: Restrict App Permissions (Action Needed)', text: 'Go to your phone’s settings > App Permissions. Remove access for apps that don’t need sensitive information (location, contacts, camera).', severity: 'High', category: 'Phone Security' },
+            'rec_app_permissions_unsure': { title: 'Phone Security: Restrict App Permissions (Verify)', text: 'If unsure, regularly review your app permissions to ensure they align with your privacy needs.', severity: 'Medium', category: 'Phone Security' },
+            'rec_screen_lock_no': { title: 'Phone Security: Use Secure Screen Lock (Action Needed)', text: 'Set a strong screen lock (PIN, password, or biometric) and reduce your screen timeout to 30 seconds or 1 minute.', severity: 'High', category: 'Phone Security' },
+            'rec_screen_lock_unsure': { title: 'Phone Security: Use Secure Screen Lock (Verify)', text: 'If unsure, check your phone’s screen lock settings and ensure they are secure.', severity: 'Medium', category: 'Phone Security' },
+
+            // Account Security - Texts updated to match user's latest prompt
+            'rec_unique_passwords_no': { title: 'Account Security: Use Unique Passwords (Action Needed)', text: 'Use 1Password (available through your organization) to generate and securely store unique passwords for each account.', severity: 'Critical', category: 'Account Security' },
+            'rec_unique_passwords_unsure': { title: 'Account Security: Use Unique Passwords (Verify)', text: 'If unsure, review your passwords using 1Password. If you’re using the same password for multiple accounts, update them.', severity: 'High', category: 'Account Security' },
+            'rec_org_1password_no': { title: 'Account Security: Utilize 1Password (Action Needed)', text: 'Sign up for your organization’s 1Password service. It provides secure password management and sharing.', severity: 'High', category: 'Account Security' },
+            'rec_org_1password_unsure': { title: 'Account Security: Utilize 1Password (Verify/Setup)', text: 'If unsure, contact your IT department for help setting up 1Password.', severity: 'Medium', category: 'Account Security' },
+            'rec_2fa_critical_no': { title: 'Account Security: Enable 2FA (Action Needed)', text: 'Enable 2FA for email, social media, and any sensitive accounts. Use an authenticator app like Google Authenticator.', severity: 'Critical', category: 'Account Security' },
+            'rec_2fa_critical_unsure': { title: 'Account Security: Enable 2FA (Verify)', text: 'If unsure, review your accounts and enable 2FA where possible.', severity: 'High', category: 'Account Security' },
+
+            // Communication Security - Texts updated, metadata recommendation removed
+            'rec_signal_sensitive_no': { title: 'Communication: Use Signal (Action Needed)', text: 'Download and set up Signal for secure messaging, which is free and encrypts all messages.', severity: 'High', category: 'Communication Security' },
+            'rec_signal_sensitive_unsure': { title: 'Communication: Use Signal (Verify/Setup)', text: 'If unsure, install Signal and begin using it for any communication you want to keep private.', severity: 'Medium', category: 'Communication Security' },
+            'rec_video_precautions_no': { title: 'Communication: Video Call Precautions (Action Needed)', text: 'Blur your background, avoid showing personal items, and ensure no sensitive information is visible.', severity: 'Medium', category: 'Communication Security' },
+            'rec_video_precautions_unsure': { title: 'Communication: Video Call Precautions (Verify)', text: 'If unsure, review your video call setup and use virtual backgrounds if available.', severity: 'Low', category: 'Communication Security' },
+            // 'rec_metadata_aware_no' and 'rec_metadata_aware_unsure' are removed
+
+            // Collaboration Security (These were not re-listed by user, so keeping previous versions)
+            'rec_collab_email_external_risky': { title: 'Collaboration: Secure Document Sharing (Email Externals)', text: 'Regularly sharing documents via email with external collaborators poses security risks. Email can be intercepted, forwarded without permission, or sent to wrong recipients. Use your organization\'s secure file-sharing platforms like Microsoft OneDrive or Google Drive with access controls instead. Create shared folders with specific permissions and send secure links rather than attachments.', severity: 'Medium', category: 'Collaboration Security Practices' },
+            'rec_collab_attachments_risky': { title: 'Collaboration: Use Secure Links over Attachments', text: 'Email attachments create security risks because they can\\'t be revoked once sent and you lose control over who accesses them. Switch to secure, access-controlled links from your organization\\'s cloud storage. This allows you to track who accesses documents, set expiration dates, and revoke access if needed. Configure sharing settings to require authentication before access.', severity: 'Medium', category: 'Collaboration Security Practices' },
+            'rec_collab_sensitive_messaging_risky': { title: 'Collaboration: Avoid Sensitive Docs in Messaging Apps', text: 'Sharing sensitive documents through messaging apps like WhatsApp, Slack, or Teams creates significant security risks. These platforms may store files on their servers, lack proper access controls, and make it difficult to track who has accessed your documents. Use your organization\\'s secure file-sharing platforms with proper access controls, audit trails, and the ability to revoke access when needed.', severity: 'High', category: 'Collaboration Security Practices' },
+            'rec_collab_email_encrypted_missing': { title: 'Collaboration: Encrypt Sensitive Emails', text: 'Unencrypted emails containing sensitive information can be intercepted and read by unauthorized parties. Enable email encryption through your organization\'s email system (such as Microsoft 365 encryption features). When sending sensitive information, use your email client\'s encryption options or consider whether the information should be shared through more secure channels like your organization\'s secure file-sharing platform instead.', severity: 'High', category: 'Collaboration Security Practices' }
+            ,
+
+            // Browser Security
+            'rec_browser_extensions_no': { title: 'Browser Security: Remove Unnecessary Extensions (Action Needed)', text: 'Review your browser extensions and remove any you don\'t actively use. Each extension can access your browsing data and potentially compromise your security. Keep only essential, trusted extensions from reputable developers.', severity: 'High', category: 'Browser Security' },
+            'rec_browser_extensions_unsure': { title: 'Browser Security: Review Browser Extensions (Verify)', text: 'Check your browser\'s extension/add-on manager to see what\'s installed. Remove extensions you don\'t recognize or use regularly, as they can pose security risks.', severity: 'Medium', category: 'Browser Security' },
+            'rec_browser_security_no': { title: 'Browser Security: Enable Security Features (Action Needed)', text: 'Enable your browser\'s built-in security features like Safe Browsing (Chrome/Edge), Enhanced Tracking Protection (Firefox), or Intelligent Tracking Prevention (Safari). These help block malicious websites and downloads.', severity: 'High', category: 'Browser Security' },
+            'rec_browser_security_unsure': { title: 'Browser Security: Check Security Settings (Verify)', text: 'Go to your browser\'s security/privacy settings to ensure features like safe browsing, pop-up blocking, and download protection are enabled.', severity: 'Medium', category: 'Browser Security' },
+            'rec_browser_password_no': { title: 'Browser Security: Use Dedicated Password Manager (Action Needed)', text: 'Instead of saving passwords in your browser, use a dedicated password manager like 1Password (available through your organization). This provides better security and prevents password access if your browser is compromised.', severity: 'High', category: 'Browser Security' },
+            'rec_browser_password_unsure': { title: 'Browser Security: Centralize Password Management (Verify)', text: 'Check where your passwords are currently stored. If using multiple browsers or browser password managers, consider consolidating to your organization\'s 1Password service for better security.', severity: 'Medium', category: 'Browser Security' },
+            'rec_browser_private_no': { title: 'Browser Security: Use Private Browsing (Action Needed)', text: 'Use private/incognito browsing when researching sensitive topics, using shared computers, or accessing accounts on devices that aren\'t yours. This prevents browsing history and temporary files from being saved.', severity: 'Medium', category: 'Browser Security' },
+            'rec_browser_private_unsure': { title: 'Browser Security: Learn Private Browsing (Verify)', text: 'Familiarize yourself with your browser\'s private/incognito mode (Ctrl+Shift+N in Chrome/Edge, Ctrl+Shift+P in Firefox). Use it for sensitive research and when using shared devices.', severity: 'Low', category: 'Browser Security' },
+
+            // Software Updates & Maintenance
+            'rec_os_updates_no': { title: 'Software Updates: Enable Automatic OS Updates (Action Needed)', text: 'Enable automatic updates for your operating system (Windows Update, macOS Software Update, etc.). Security patches are critical for protecting against newly discovered vulnerabilities.', severity: 'Critical', category: 'Software Updates & Maintenance' },
+            'rec_os_updates_unsure': { title: 'Software Updates: Check OS Update Settings (Verify)', text: 'Check your system settings to ensure automatic updates are enabled. For Windows: Settings > Update & Security. For macOS: System Preferences > Software Update.', severity: 'High', category: 'Software Updates & Maintenance' },
+            'rec_app_updates_no': { title: 'Software Updates: Update Applications Regularly (Action Needed)', text: 'Set up automatic updates where possible for your applications, or establish a routine to check for updates weekly. Focus on frequently-used apps, browsers, and security software first.', severity: 'High', category: 'Software Updates & Maintenance' },
+            'rec_app_updates_unsure': { title: 'Software Updates: Establish Update Routine (Verify)', text: 'Check your most critical applications for available updates. Consider enabling automatic updates where available, especially for browsers, productivity software, and security tools.', severity: 'Medium', category: 'Software Updates & Maintenance' },
+            'rec_antivirus_no': { title: 'Software Updates: Keep Antivirus Updated (Action Needed)', text: 'If you use antivirus software, ensure it\'s set to update automatically. Outdated virus definitions leave you vulnerable to new threats. Consider using Windows Defender (built into Windows) or your organization\'s recommended security solution.', severity: 'High', category: 'Software Updates & Maintenance' },
+            'rec_antivirus_unsure': { title: 'Software Updates: Check Antivirus Status (Verify)', text: 'Check your antivirus software\'s status and update settings. If you\'re unsure what antivirus you have, Windows Defender is built into Windows and updates automatically.', severity: 'Medium', category: 'Software Updates & Maintenance' },
+            'rec_unused_software_no': { title: 'Software Updates: Remove Unused Software (Action Needed)', text: 'Regularly audit and uninstall software you no longer use. Unused programs can contain security vulnerabilities and provide unnecessary attack surfaces. Use your system\'s add/remove programs feature to clean up.', severity: 'Medium', category: 'Software Updates & Maintenance' },
+            'rec_unused_software_unsure': { title: 'Software Updates: Audit Installed Software (Verify)', text: 'Review your installed programs list to identify software you no longer use. Uninstalling unused programs reduces your security risk and can improve system performance.', severity: 'Low', category: 'Software Updates & Maintenance' }
+        };
+
+        // --- APPLICATION LOGIC ---
+        let currentStepIndex = 0;
+        let userAnswers = {};
+
+        // DOM Element References (will be assigned in initializeApp)
+        let startBtn, introductionSection, questionnaireSection, resultsSection,
+            questionContainer, nextBtn, prevBtn, printBtn, resetBtn,
+            progressBarContainer, progressBar, progressText,
+            resultsSummaryEl, recommendationsContainer;
+
+
+        // --- Core Functions ---
+        function displayStep() {
+            const step = assessmentSteps[currentStepIndex];
+            if (!questionContainer) {
+                console.error("displayStep: questionContainer is not defined or not found.");
+                return;
+            }
+            questionContainer.innerHTML = '';
+
+            const stepTitle = document.createElement('h2');
+            stepTitle.className = 'text-2xl font-semibold text-sky-700 mb-3';
+            stepTitle.textContent = step.title;
+            questionContainer.appendChild(stepTitle);
+
+            if (step.instructions) {
+                const instructionsP = document.createElement('p');
+                instructionsP.className = 'text-slate-600 mb-6';
+                instructionsP.textContent = step.instructions;
+                questionContainer.appendChild(instructionsP);
+            }
+
+            if (step.org_tool_mention && step.org_tool_mention.length > 0) {
+                const toolsMention = document.createElement('p');
+                toolsMention.className = 'text-sm text-sky-600 mb-4 italic';
+                toolsMention.textContent = `Relevant organizational tools: ${step.org_tool_mention.join(', ')}`;
+                questionContainer.appendChild(toolsMention);
+            }
+
+            if (step.type === 'grouped_radio' || step.type === 'conditional_grouped_radio') {
+                renderGroupedRadio(step);
+            } else if (step.type === 'checkbox_select') {
+                renderCheckboxSelect(step);
+            }
+
+            updateProgress();
+            if(prevBtn) prevBtn.classList.toggle('hidden', currentStepIndex === 0);
+            if(nextBtn) nextBtn.textContent = (currentStepIndex === assessmentSteps.length - 1) ? 'View Results' : 'Next';
+        }
+
+        function renderGroupedRadio(step) {
+             let subQuestionsToDisplay = step.sub_questions;
+
+             if (step.type === 'conditional_grouped_radio') {
+                 const sourceAnswers = userAnswers[step.source_question_id] || [];
+                 subQuestionsToDisplay = [];
+                 if (sourceAnswers.length > 0) {
+                     sourceAnswers.forEach(platformId => {
+                         if (step.platform_details[platformId]) {
+                             subQuestionsToDisplay.push({
+                                 id: `${step.id}_${platformId}`,
+                                 text: step.platform_details[platformId].text_template,
+                                 rec_map: step.platform_details[platformId].rec_map,
+                                 platform_id: platformId
+                             });
+                         }
+                     });
+                 }
+                 if (subQuestionsToDisplay.length === 0) {
+                      const noPlatformsMessage = document.createElement('p');
+                      noPlatformsMessage.className = 'text-slate-500 italic p-4 bg-slate-50 rounded-md';
+                      noPlatformsMessage.textContent = 'No social media platforms were selected in the previous step, so this section is not applicable. Click "Next" to continue.';
+                      if(questionContainer) questionContainer.appendChild(noPlatformsMessage);
+                      return;
+                 }
+             }
+
+             subQuestionsToDisplay.forEach(subQ => {
+                 const fieldset = document.createElement('fieldset');
+                 fieldset.className = 'sub-question-group';
+                 fieldset.id = subQ.id;
+
+                 const legend = document.createElement('legend');
+                 legend.className = 'text-lg mb-3 text-slate-700';
+                 legend.textContent = subQ.text;
+                 fieldset.appendChild(legend);
+
+                 const optionsDiv = document.createElement('div');
+                 optionsDiv.className = 'flex flex-wrap';
+                 step.options.forEach(opt => {
+                     const label = document.createElement('label');
+                     label.className = 'radio-option-label';
+                     const input = document.createElement('input');
+                     input.type = 'radio';
+                     input.name = subQ.id;
+                     input.value = opt.value;
+                     input.className = 'mr-2 accent-sky-600';
+
+                     if (userAnswers[step.id] && userAnswers[step.id][subQ.id] === opt.value) {
+                         input.checked = true;
+                         label.classList.add('selected');
+                     }
+                     input.onchange = () => {
+                         fieldset.querySelectorAll('.radio-option-label').forEach(l => l.classList.remove('selected'));
+                         label.classList.add('selected');
+                     };
+
+                     const span = document.createElement('span');
+                     span.textContent = opt.text;
+                     label.appendChild(input);
+                     label.appendChild(span);
+                     optionsDiv.appendChild(label);
+                 });
+                 fieldset.appendChild(optionsDiv);
+                 if(questionContainer) questionContainer.appendChild(fieldset);
+             });
+        }
+
+         function renderCheckboxSelect(step) {
+            const platformContainer = document.createElement('div');
+            platformContainer.className = 'space-y-3';
+            step.platforms.forEach(platform => {
+                const label = document.createElement('label');
+                label.className = 'checkbox-option-label block p-3 border border-slate-300 rounded-md hover:bg-sky-50';
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.name = step.id;
+                input.value = platform.id;
+                input.className = 'mr-3 accent-sky-600 transform scale-125';
+
+                if (userAnswers[step.id] && userAnswers[step.id].includes(platform.id)) {
+                    input.checked = true;
+                     label.classList.add('selected');
+                }
+                input.onchange = () => {
+                    label.classList.toggle('selected', input.checked);
+                };
+
+                const span = document.createElement('span');
+                span.textContent = platform.label;
+                label.appendChild(input);
+                label.appendChild(span);
+                platformContainer.appendChild(label);
+            });
+            if(questionContainer) questionContainer.appendChild(platformContainer);
+         }
+
+
+        function collectAnswer() {
+            const step = assessmentSteps[currentStepIndex];
+            let answersForStep = {};
+            let allAnswered = true;
+
+            if (step.type === 'grouped_radio') {
+                step.sub_questions.forEach(subQ => {
+                    const selected = document.querySelector(`input[name="${subQ.id}"]:checked`);
+                    if (selected) {
+                        answersForStep[subQ.id] = selected.value;
+                    } else {
+                        allAnswered = false;
+                    }
+                });
+            } else if (step.type === 'conditional_grouped_radio') {
+                 const sourceAnswers = userAnswers[step.source_question_id] || [];
+                 if (sourceAnswers.length > 0) {
+                    let conditionalSubQuestionsExist = false;
+                    sourceAnswers.forEach(platformId => {
+                        if (step.platform_details[platformId]) {
+                            conditionalSubQuestionsExist = true;
+                            const subQId = `${step.id}_${platformId}`;
+                            const selected = document.querySelector(`input[name="${subQId}"]:checked`);
+                            if (selected) {
+                                answersForStep[subQId] = selected.value;
+                            } else {
+                                allAnswered = false;
+                            }
+                        }
+                    });
+                    if (!conditionalSubQuestionsExist) allAnswered = true;
+                 } else {
+                    allAnswered = true;
+                 }
+
+            } else if (step.type === 'checkbox_select') {
+                answersForStep = Array.from(document.querySelectorAll(`input[name="${step.id}"]:checked`)).map(cb => cb.value);
+                allAnswered = true;
+            }
+
+            const errorMsgElement = questionContainer ? questionContainer.querySelector('.error-message') : null;
+            if (!allAnswered) {
+                if (!errorMsgElement && questionContainer) {
+                    const errorMsg = document.createElement('p');
+                    errorMsg.className = 'text-red-500 text-sm mt-4 error-message font-medium';
+                    errorMsg.textContent = 'Please answer all parts of this section to continue.';
+                     const insertBeforeElement = questionContainer.querySelector('p.text-slate-600.mb-6') || questionContainer.querySelector('h2');
+                     if (insertBeforeElement) {
+                         insertBeforeElement.parentNode.insertBefore(errorMsg, insertBeforeElement.nextSibling);
+                     } else {
+                         questionContainer.prepend(errorMsg);
+                     }
+                }
+                return false;
+            }
+
+            if (errorMsgElement) errorMsgElement.remove();
+
+            userAnswers[step.id] = answersForStep;
+            return true;
+        }
+
+
+        function displayResults() {
+            if (!questionnaireSection || !resultsSection || !progressBarContainer || !recommendationsContainer || !resultsSummaryEl) {
+                console.error("displayResults: One or more critical DOM elements for results display are missing.");
+                return;
+            }
+            questionnaireSection.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            progressBarContainer.classList.add('hidden');
+
+            recommendationsContainer.innerHTML = '';
+            resultsSummaryEl.innerHTML = '';
+
+            let overallRecsExist = false;
+
+            assessmentSteps.forEach(step => {
+                if (step.type !== 'grouped_radio' && step.type !== 'conditional_grouped_radio') return;
+
+                const answers = userAnswers[step.id];
+                if (!answers) return;
+
+                let subQuestionsForCategory = [];
+                if (step.type === 'grouped_radio') {
+                    subQuestionsForCategory = step.sub_questions;
+                } else if (step.type === 'conditional_grouped_radio') {
+                    const sourceAnswers = userAnswers[step.source_question_id] || [];
+                    sourceAnswers.forEach(platformId => {
+                        if (step.platform_details[platformId]) {
+                            subQuestionsForCategory.push({
+                                id: `${step.id}_${platformId}`,
+                                rec_map: step.platform_details[platformId].rec_map,
+                                platform_id: platformId
+                            });
+                        }
+                    });
+                }
+                if (subQuestionsForCategory.length === 0) return;
+
+                let categoryRecIds = new Set();
+                let riskyAnswersCount = 0;
+
+                subQuestionsForCategory.forEach(subQConfig => {
+                    const answerValue = answers[subQConfig.id];
+                    if (answerValue && subQConfig.rec_map && subQConfig.rec_map[answerValue]) {
+                        riskyAnswersCount++;
+                        subQConfig.rec_map[answerValue].forEach(id => categoryRecIds.add(id));
+                    }
+                });
+
+                const totalSubQuestions = subQuestionsForCategory.length;
+                let riskLevel = 'Limited Risk';
+                let riskClass = 'risk-limited risk-text-limited';
+                let riskBgClass = 'risk-limited-bg';
+
+                if (riskyAnswersCount === 0) {
+                    riskLevel = 'Limited Risk';
+                    riskClass = 'risk-limited risk-text-limited';
+                    riskBgClass = 'risk-limited-bg';
+                } else if (riskyAnswersCount > totalSubQuestions / 2) {
+                    riskLevel = 'High Risk';
+                    riskClass = 'risk-high risk-text-high';
+                    riskBgClass = 'risk-high-bg';
+                } else {
+                    riskLevel = 'Medium Risk';
+                    riskClass = 'risk-medium risk-text-medium';
+                    riskBgClass = 'risk-medium-bg';
+                }
+
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category-results mb-6 p-1 rounded-lg shadow';
+
+                const catHeader = document.createElement('h4');
+                catHeader.className = `text-xl font-semibold p-3 rounded-t-md border-l-4 category-risk-header ${riskBgClass}`;
+                catHeader.innerHTML = `${step.title} <span class="text-sm font-medium px-2 py-0.5 rounded-full ml-2 align-middle ${riskClass.split(' ')[1]} ${riskBgClass.replace('bg-', 'text-').replace('-bg', '-100')}">${riskLevel}</span>`;
+                categoryDiv.appendChild(catHeader);
+
+                const recsListDiv = document.createElement('div');
+                recsListDiv.className = 'space-y-3 p-4 bg-white rounded-b-md';
+
+                if (categoryRecIds.size > 0) {
+                    overallRecsExist = true;
+                    const severityOrder = { 'Critical': 0, 'High': 1, 'Medium': 2, 'Low': 3 };
+                    const sortedRecs = Array.from(categoryRecIds)
+                                            .map(id => recommendations[id])
+                                            .filter(Boolean)
+                                            .sort((a,b) => severityOrder[a.severity] - severityOrder[b.severity]);
+
+                    sortedRecs.forEach(rec => {
+                        const recDiv = document.createElement('div');
+                        recDiv.className = 'p-3 rounded-md border recommendation-card';
+                        let borderColorRec = 'border-yellow-400 bg-yellow-50';
+                        let severityLabelClass = 'severity-low';
+                        if (rec.severity === 'Critical') {
+                            borderColorRec = 'border-red-400 bg-red-50';
+                            severityLabelClass = 'severity-critical';
+                        } else if (rec.severity === 'High') {
+                            borderColorRec = 'border-red-400 bg-red-50';
+                            severityLabelClass = 'severity-high';
+                        } else if (rec.severity === 'Medium') {
+                            borderColorRec = 'border-orange-400 bg-orange-50';
+                            severityLabelClass = 'severity-medium';
+                        }
+                        recDiv.classList.add(...borderColorRec.split(' '));
+
+                        const title = document.createElement('h5');
+                        title.className = 'font-semibold text-md text-slate-800';
+                        title.textContent = rec.title;
+
+                        const severitySpan = document.createElement('span');
+                        severitySpan.className = `severity-label ${severityLabelClass}`;
+                        severitySpan.textContent = rec.severity;
+
+                        title.appendChild(severitySpan);
+                        recDiv.appendChild(title);
+
+                        const textP = document.createElement('p');
+                        textP.className = 'text-sm text-slate-700 mt-1.5';
+                        textP.innerHTML = rec.text;
+                        recDiv.appendChild(textP);
+                        recsListDiv.appendChild(recDiv);
+                    });
+                } else {
+                    const noRecsP = document.createElement('p');
+                    noRecsP.className = 'text-sm text-slate-600 p-4 bg-white rounded-b-md italic';
+                    noRecsP.textContent = "No specific recommendations for this category based on your answers. Well done!";
+                    recsListDiv.appendChild(noRecsP);
+                }
+                categoryDiv.appendChild(recsListDiv);
+                recommendationsContainer.appendChild(categoryDiv);
+            });
+
+            const piiRisk = userAnswers['personal_exposure']?.['home_address_findable'] === 'yes' ||
+                            userAnswers['personal_exposure']?.['personal_phone_available'] === 'yes' ||
+                            userAnswers['personal_exposure']?.['family_info_discoverable'] === 'yes';
+
+             if (piiRisk) {
+                const googleRec = recommendations['rec_google_search_pii'];
+                 const alreadyAdded = document.getElementById('rec_google_search_pii_card');
+
+                 if (googleRec && !alreadyAdded) {
+                    overallRecsExist = true;
+                    const recDiv = document.createElement('div');
+                    recDiv.id = 'rec_google_search_pii_card';
+                    recDiv.className = 'p-4 mt-4 rounded-lg shadow-md border-l-4 border-red-400 bg-red-50 recommendation-card';
+                    const severityLabelClass = 'severity-high';
+                    recDiv.innerHTML = `<h5 class="font-semibold text-md text-slate-800">${googleRec.title} <span class="severity-label ${severityLabelClass}">${googleRec.severity}</span></h5><p class="text-sm text-slate-700 mt-1.5">${googleRec.text}</p>`;
+
+                    let targetListDiv = null;
+                    const piiExposureHeader = Array.from(recommendationsContainer.querySelectorAll('h4')).find(h => h.textContent.includes('Personal Information Exposure'));
+                    if (piiExposureHeader) {
+                       targetListDiv = piiExposureHeader.parentElement.querySelector('.space-y-3');
+                    }
+
+                    if (targetListDiv) {
+                        targetListDiv.appendChild(recDiv);
+                    } else {
+                         const generalRecsHeader = document.createElement('h4');
+                         generalRecsHeader.className = 'text-xl font-semibold text-sky-600 mt-5 mb-3 border-b border-slate-200 pb-2';
+                         generalRecsHeader.textContent = "Additional Recommendation";
+                         recommendationsContainer.appendChild(generalRecsHeader);
+                         const listDiv = document.createElement('div');
+                         listDiv.className = 'space-y-3 p-4 bg-white rounded-b-md';
+                         listDiv.appendChild(recDiv);
+                         recommendationsContainer.appendChild(listDiv);
+                    }
+                }
+            }
+
+            if (!overallRecsExist) {
+                resultsSummaryEl.innerHTML = `<p class="text-lg text-green-700 font-semibold mb-4">Excellent! Based on your answers, you appear to be following many key security best practices. Keep up the great work!</p><p>No specific recommendations were triggered. However, always stay vigilant and keep learning about digital security. Your IT department is a valuable resource for ongoing support and information.</p>`;
+            } else {
+                resultsSummaryEl.innerHTML = `<p class="text-lg mb-4">Based on your responses, here are some tailored recommendations to help enhance your digital security. Focus on those marked 'Critical' or 'High' first.</p>`;
+            }
+        }
+
+
+        function updateProgress() {
+            if (!progressBar || !progressText) {
+                return;
+            }
+            const progress = assessmentSteps.length > 0 ? ((currentStepIndex + 1) / assessmentSteps.length) * 100 : 0;
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `Step ${currentStepIndex + 1} of ${assessmentSteps.length}`;
+        }
+
+        // --- Event Listeners Setup ---
+        function initializeApp() {
+            console.log("initializeApp: Attempting to initialize app and find DOM elements.");
+            startBtn = document.getElementById('start-assessment-btn');
+            introductionSection = document.getElementById('introduction-section');
+            questionnaireSection = document.getElementById('questionnaire-section');
+            resultsSection = document.getElementById('results-section');
+            questionContainer = document.getElementById('question-container');
+            nextBtn = document.getElementById('next-question-btn');
+            prevBtn = document.getElementById('prev-question-btn');
+            printBtn = document.getElementById('print-results-btn');
+            resetBtn = document.getElementById('reset-assessment-btn');
+            progressBarContainer = document.getElementById('progress-bar-container');
+            progressBar = document.getElementById('progress-bar');
+            progressText = document.getElementById('progress-text');
+            resultsSummaryEl = document.getElementById('results-summary');
+            recommendationsContainer = document.getElementById('recommendations-container');
+
+            if (!startBtn || !introductionSection || !questionnaireSection || !resultsSection || !questionContainer || !nextBtn || !prevBtn || !printBtn || !resetBtn || !progressBarContainer || !resultsSummaryEl || !recommendationsContainer) {
+                console.error("initializeApp: One or more critical DOM elements were not found. Assessment may not function correctly.");
+                const body = document.querySelector('body');
+                if (body && !body.querySelector('#init-error-msg')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.id = 'init-error-msg';
+                    errorDiv.textContent = "Error: The assessment tool could not be initialized properly. Some elements are missing. Please refresh or contact support.";
+                    errorDiv.style.color = "white";
+                    errorDiv.style.backgroundColor = "red";
+                    errorDiv.style.padding = "10px";
+                    errorDiv.style.textAlign = "center";
+                    errorDiv.style.fontWeight = "bold";
+                    body.prepend(errorDiv);
+                }
+                return;
+            }
+            console.log("initializeApp: All DOM elements successfully found.");
+
+
+            startBtn.addEventListener('click', () => {
+                console.log("Start Assessment button clicked.");
+                currentStepIndex = 0;
+                userAnswers = {};
+                introductionSection.classList.add('hidden');
+                questionnaireSection.classList.remove('hidden');
+                progressBarContainer.classList.remove('hidden');
+                resultsSection.classList.add('hidden');
+                displayStep();
+                window.scrollTo(0,0);
+            });
+
+            nextBtn.addEventListener('click', () => {
+                console.log("Next button clicked.");
+                if (!collectAnswer()) return;
+
+                if (currentStepIndex < assessmentSteps.length - 1) {
+                    currentStepIndex++;
+                    const nextStep = assessmentSteps[currentStepIndex];
+                    if (nextStep.type === 'conditional_grouped_radio') {
+                        const sourceAnswers = userAnswers[nextStep.source_question_id];
+                        let hasQuestionsForConditionalStep = false;
+                        if (sourceAnswers && sourceAnswers.length > 0) {
+                            sourceAnswers.forEach(platformId => {
+                                if (nextStep.platform_details[platformId]) {
+                                    hasQuestionsForConditionalStep = true;
+                                }
+                            });
+                        }
+                        if (!hasQuestionsForConditionalStep) {
+                            userAnswers[nextStep.id] = {};
+                            if (currentStepIndex < assessmentSteps.length - 1) {
+                               currentStepIndex++;
+                            } else {
+                               displayResults();
+                               window.scrollTo(0,0);
+                               return;
+                            }
+                        }
+                    }
+                    displayStep();
+                    window.scrollTo(0,0);
+                } else {
+                    displayResults();
+                    window.scrollTo(0,0);
+                }
+            });
+
+            prevBtn.addEventListener('click', () => {
+                console.log("Previous button clicked.");
+                if (currentStepIndex > 0) {
+                    currentStepIndex--;
+                    const prevStep = assessmentSteps[currentStepIndex];
+                     if (prevStep.type === 'conditional_grouped_radio') {
+                        const sourceAnswers = userAnswers[prevStep.source_question_id];
+                        let hasQuestionsForConditionalStep = false;
+                         if (sourceAnswers && sourceAnswers.length > 0) {
+                            sourceAnswers.forEach(platformId => {
+                                if (prevStep.platform_details[platformId]) {
+                                    hasQuestionsForConditionalStep = true;
+                                }
+                            });
+                        }
+                         if (!hasQuestionsForConditionalStep && currentStepIndex > 0) {
+                             currentStepIndex--;
+                         }
+                    }
+                    displayStep();
+                    window.scrollTo(0,0);
+                }
+            });
+
+            printBtn.addEventListener('click', () => {
+                console.log("Print button clicked. Preparing printable content.");
+
+                const resultsSectionNode = document.getElementById('results-section');
+                if (!resultsSectionNode) {
+                    console.error("Cannot print: Results section not found.");
+                    alert("Error: Could not find results to print.");
+                    return;
+                }
+                // Clone the results section for printing
+                const resultsContent = resultsSectionNode.cloneNode(true);
+
+                // Remove non-printable elements from the clone
+                const actionButtonsClone = resultsContent.querySelector('#action-buttons-container');
+                if (actionButtonsClone) actionButtonsClone.remove();
+                const disclaimerClone = resultsContent.querySelector('.disclaimer-paragraph');
+                if (disclaimerClone) disclaimerClone.remove();
+
+
+                const printWindow = window.open('', '_blank', 'height=800,width=800');
+                if (!printWindow) {
+                    alert("Pop-up blocked? Please allow pop-ups for this site to print results.");
+                    return;
+                }
+                printWindow.document.open();
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <title>Your Security Assessment Results</title>
+                        <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+                        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+                        <style>
+                            body { font-family: 'Inter', sans-serif; margin: 20px; padding: 0; line-height: 1.6; color: #333; }
+                            .container { max-width: 1000px; margin: auto; }
+                            h1, h2, h3, h4, h5 { page-break-after: avoid; margin-top: 1.5em; margin-bottom: 0.5em; color: #1e3a8a; }
+                            h1 { font-size: 2em; text-align: center; margin-bottom: 1em; }
+                            h2 { font-size: 1.75em; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.3em;}
+                            h3 { font-size: 1.5em; }
+                            h4 { font-size: 1.25em; }
+                            p { margin-bottom: 1em; }
+                            a { color: #2563eb; text-decoration: underline; }
+                            .recommendation-card { border: 1px solid #e2e8f0; padding: 1rem; margin-bottom: 1rem; border-radius: 0.375rem; page-break-inside: avoid; background-color: #f8fafc; }
+                            .severity-label { display: inline-block; padding: 0.25rem 0.75rem; font-size: 0.8rem; font-weight: 600; border-radius: 9999px; margin-left: 0.5rem; vertical-align: middle; }
+                            .severity-critical { background-color: #b91c1c; color: white; }
+                            .severity-high { background-color: #dc2626; color: white; }
+                            .severity-medium { background-color: #ea580c; color: white; }
+                            .severity-low { background-color: #facc15; color: black; }
+                            .category-risk-header { padding: 0.75rem; border-left-width: 4px; border-radius: 0.375rem 0.375rem 0 0; }
+                            .risk-high-bg { background-color: #fee2e2; border-left-color: #dc2626 !important; }
+                            .risk-medium-bg { background-color: #ffedd5; border-left-color: #f97316 !important; }
+                            .risk-limited-bg { background-color: #dcfce7; border-left-color: #16a34a !important; }
+                            .risk-text-high { color: #991b1b; }
+                            .risk-text-medium { color: #c2410c; }
+                            .risk-text-limited { color: #15803d; }
+                            .space-y-6 > div { margin-bottom: 1.5rem; }
+                            .space-y-3 > div { margin-bottom: 0.75rem; }
+                            @media print {
+                                body { margin: 0.5in; }
+                                .category-risk-header, .severity-label { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                                a { color: #000 !important; text-decoration: underline !important; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            ${resultsContent.innerHTML}
+                        </div>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                    // Consider removing automatic close or making it more robust if issues persist
+                    // printWindow.onafterprint = function() { printWindow.close(); };
+                }, 500);
+            });
+
+            resetBtn.addEventListener('click', () => {
+                console.log("Reset button clicked.");
+                currentStepIndex = 0;
+                userAnswers = {};
+                resultsSection.classList.add('hidden');
+                introductionSection.classList.remove('hidden');
+                questionnaireSection.classList.add('hidden');
+                progressBarContainer.classList.add('hidden');
+                if(progressBar) progressBar.style.width = '0%';
+                if(progressText) progressText.textContent = 'Step 0 of 0';
+                window.scrollTo(0,0);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+    </script>
+</body>
+</html>
