@@ -251,9 +251,7 @@
                 type: 'grouped_radio',
                 sub_questions: [
                     { id: 'browser_extensions_reviewed', text: 'Have you reviewed and removed unnecessary browser extensions?', rec_map: { 'no': ['rec_browser_extensions_no'], 'unsure': ['rec_browser_extensions_unsure'] } },
-                    { id: 'browser_security_settings', text: 'Have you enabled security features in your browser (like blocking dangerous downloads, enabling safe browsing)?', rec_map: { 'no': ['rec_browser_security_no'], 'unsure': ['rec_browser_security_unsure'] } },
-                    { id: 'browser_password_manager', text: 'Do you use your browser\'s built-in password manager or a dedicated password manager instead of saving passwords in multiple browsers?', rec_map: { 'no': ['rec_browser_password_no'], 'unsure': ['rec_browser_password_unsure'] } },
-                    { id: 'browser_private_browsing', text: 'Do you use private/incognito browsing when researching sensitive topics or accessing accounts on shared devices?', rec_map: { 'no': ['rec_browser_private_no'], 'unsure': ['rec_browser_private_unsure'] } }
+                    { id: 'browser_password_manager', text: 'Do you use a dedicated password manager (like 1Password) instead of saving passwords in your browser?', rec_map: { 'no': ['rec_browser_password_no'], 'unsure': ['rec_browser_password_unsure'] } },
                 ],
                 options: [ { text: 'Yes', value: 'yes' }, { text: 'No', value: 'no' }, { text: 'Unsure', value: 'unsure' } ]
             },
@@ -265,7 +263,6 @@
                 sub_questions: [
                     { id: 'os_updates_enabled', text: 'Do you have automatic updates enabled for your operating system (Windows, macOS, etc.)?', rec_map: { 'no': ['rec_os_updates_no'], 'unsure': ['rec_os_updates_unsure'] } },
                     { id: 'app_updates_regular', text: 'Do you regularly update your applications and software?', rec_map: { 'no': ['rec_app_updates_no'], 'unsure': ['rec_app_updates_unsure'] } },
-                    { id: 'antivirus_updated', text: 'If you use antivirus software, is it kept up-to-date with current definitions?', rec_map: { 'no': ['rec_antivirus_no'], 'unsure': ['rec_antivirus_unsure'] } },
                     { id: 'unused_software_removed', text: 'Do you regularly remove or uninstall software and apps you no longer use?', rec_map: { 'no': ['rec_unused_software_no'], 'unsure': ['rec_unused_software_unsure'] } }
                 ],
                 options: [ { text: 'Yes', value: 'yes' }, { text: 'No', value: 'no' }, { text: 'Unsure', value: 'unsure' } ]
@@ -322,28 +319,22 @@
 
             // Collaboration Security (These were not re-listed by user, so keeping previous versions)
             'rec_collab_email_external_risky': { title: 'Collaboration: Secure Document Sharing (Email Externals)', text: 'Regularly sharing documents via email with external collaborators poses security risks. Email can be intercepted, forwarded without permission, or sent to wrong recipients. Use your organization\'s secure file-sharing platforms like Microsoft OneDrive or Google Drive with access controls instead. Create shared folders with specific permissions and send secure links rather than attachments.', severity: 'Medium', category: 'Collaboration Security Practices' },
-            'rec_collab_attachments_risky': { title: 'Collaboration: Use Secure Links over Attachments', text: 'Email attachments create security risks because they can\\'t be revoked once sent and you lose control over who accesses them. Switch to secure, access-controlled links from your organization\\'s cloud storage. This allows you to track who accesses documents, set expiration dates, and revoke access if needed. Configure sharing settings to require authentication before access.', severity: 'Medium', category: 'Collaboration Security Practices' },
-            'rec_collab_sensitive_messaging_risky': { title: 'Collaboration: Avoid Sensitive Docs in Messaging Apps', text: 'Sharing sensitive documents through messaging apps like WhatsApp, Slack, or Teams creates significant security risks. These platforms may store files on their servers, lack proper access controls, and make it difficult to track who has accessed your documents. Use your organization\\'s secure file-sharing platforms with proper access controls, audit trails, and the ability to revoke access when needed.', severity: 'High', category: 'Collaboration Security Practices' },
+            'rec_collab_attachments_risky': { title: 'Collaboration: Use Secure Links over Attachments', text: 'Email attachments create security risks because they can\'t be revoked once sent and you lose control over who accesses them. Switch to secure, access-controlled links from your organization\'s cloud storage. This allows you to track who accesses documents, set expiration dates, and revoke access if needed. Configure sharing settings to require authentication before access.', severity: 'Medium', category: 'Collaboration Security Practices' },
+            'rec_collab_sensitive_messaging_risky': { title: 'Collaboration: Avoid Sensitive Docs in Messaging Apps', text: 'Sharing sensitive documents through messaging apps like WhatsApp, Slack, or Teams creates significant security risks. These platforms may store files on their servers, lack proper access controls, and make it difficult to track who has accessed your documents. Use your organization\'s secure file-sharing platforms with proper access controls, audit trails, and the ability to revoke access when needed.', severity: 'High', category: 'Collaboration Security Practices' },
             'rec_collab_email_encrypted_missing': { title: 'Collaboration: Encrypt Sensitive Emails', text: 'Unencrypted emails containing sensitive information can be intercepted and read by unauthorized parties. Enable email encryption through your organization\'s email system (such as Microsoft 365 encryption features). When sending sensitive information, use your email client\'s encryption options or consider whether the information should be shared through more secure channels like your organization\'s secure file-sharing platform instead.', severity: 'High', category: 'Collaboration Security Practices' }
             ,
 
             // Browser Security
             'rec_browser_extensions_no': { title: 'Browser Security: Remove Unnecessary Extensions (Action Needed)', text: 'Review your browser extensions and remove any you don\'t actively use. Each extension can access your browsing data and potentially compromise your security. Keep only essential, trusted extensions from reputable developers.', severity: 'High', category: 'Browser Security' },
             'rec_browser_extensions_unsure': { title: 'Browser Security: Review Browser Extensions (Verify)', text: 'Check your browser\'s extension/add-on manager to see what\'s installed. Remove extensions you don\'t recognize or use regularly, as they can pose security risks.', severity: 'Medium', category: 'Browser Security' },
-            'rec_browser_security_no': { title: 'Browser Security: Enable Security Features (Action Needed)', text: 'Enable your browser\'s built-in security features like Safe Browsing (Chrome/Edge), Enhanced Tracking Protection (Firefox), or Intelligent Tracking Prevention (Safari). These help block malicious websites and downloads.', severity: 'High', category: 'Browser Security' },
-            'rec_browser_security_unsure': { title: 'Browser Security: Check Security Settings (Verify)', text: 'Go to your browser\'s security/privacy settings to ensure features like safe browsing, pop-up blocking, and download protection are enabled.', severity: 'Medium', category: 'Browser Security' },
             'rec_browser_password_no': { title: 'Browser Security: Use Dedicated Password Manager (Action Needed)', text: 'Instead of saving passwords in your browser, use a dedicated password manager like 1Password (available through your organization). This provides better security and prevents password access if your browser is compromised.', severity: 'High', category: 'Browser Security' },
             'rec_browser_password_unsure': { title: 'Browser Security: Centralize Password Management (Verify)', text: 'Check where your passwords are currently stored. If using multiple browsers or browser password managers, consider consolidating to your organization\'s 1Password service for better security.', severity: 'Medium', category: 'Browser Security' },
-            'rec_browser_private_no': { title: 'Browser Security: Use Private Browsing (Action Needed)', text: 'Use private/incognito browsing when researching sensitive topics, using shared computers, or accessing accounts on devices that aren\'t yours. This prevents browsing history and temporary files from being saved.', severity: 'Medium', category: 'Browser Security' },
-            'rec_browser_private_unsure': { title: 'Browser Security: Learn Private Browsing (Verify)', text: 'Familiarize yourself with your browser\'s private/incognito mode (Ctrl+Shift+N in Chrome/Edge, Ctrl+Shift+P in Firefox). Use it for sensitive research and when using shared devices.', severity: 'Low', category: 'Browser Security' },
 
             // Software Updates & Maintenance
             'rec_os_updates_no': { title: 'Software Updates: Enable Automatic OS Updates (Action Needed)', text: 'Enable automatic updates for your operating system (Windows Update, macOS Software Update, etc.). Security patches are critical for protecting against newly discovered vulnerabilities.', severity: 'Critical', category: 'Software Updates & Maintenance' },
             'rec_os_updates_unsure': { title: 'Software Updates: Check OS Update Settings (Verify)', text: 'Check your system settings to ensure automatic updates are enabled. For Windows: Settings > Update & Security. For macOS: System Preferences > Software Update.', severity: 'High', category: 'Software Updates & Maintenance' },
             'rec_app_updates_no': { title: 'Software Updates: Update Applications Regularly (Action Needed)', text: 'Set up automatic updates where possible for your applications, or establish a routine to check for updates weekly. Focus on frequently-used apps, browsers, and security software first.', severity: 'High', category: 'Software Updates & Maintenance' },
             'rec_app_updates_unsure': { title: 'Software Updates: Establish Update Routine (Verify)', text: 'Check your most critical applications for available updates. Consider enabling automatic updates where available, especially for browsers, productivity software, and security tools.', severity: 'Medium', category: 'Software Updates & Maintenance' },
-            'rec_antivirus_no': { title: 'Software Updates: Keep Antivirus Updated (Action Needed)', text: 'If you use antivirus software, ensure it\'s set to update automatically. Outdated virus definitions leave you vulnerable to new threats. Consider using Windows Defender (built into Windows) or your organization\'s recommended security solution.', severity: 'High', category: 'Software Updates & Maintenance' },
-            'rec_antivirus_unsure': { title: 'Software Updates: Check Antivirus Status (Verify)', text: 'Check your antivirus software\'s status and update settings. If you\'re unsure what antivirus you have, Windows Defender is built into Windows and updates automatically.', severity: 'Medium', category: 'Software Updates & Maintenance' },
             'rec_unused_software_no': { title: 'Software Updates: Remove Unused Software (Action Needed)', text: 'Regularly audit and uninstall software you no longer use. Unused programs can contain security vulnerabilities and provide unnecessary attack surfaces. Use your system\'s add/remove programs feature to clean up.', severity: 'Medium', category: 'Software Updates & Maintenance' },
             'rec_unused_software_unsure': { title: 'Software Updates: Audit Installed Software (Verify)', text: 'Review your installed programs list to identify software you no longer use. Uninstalling unused programs reduces your security risk and can improve system performance.', severity: 'Low', category: 'Software Updates & Maintenance' }
         };
@@ -500,10 +491,13 @@
             const step = assessmentSteps[currentStepIndex];
             let answersForStep = {};
             let allAnswered = true;
+            
+            console.log("collectAnswer: Processing step", step.id, "type:", step.type);
 
             if (step.type === 'grouped_radio') {
                 step.sub_questions.forEach(subQ => {
                     const selected = document.querySelector(`input[name="${subQ.id}"]:checked`);
+                    console.log("Question", subQ.id, "selected:", selected ? selected.value : "none");
                     if (selected) {
                         answersForStep[subQ.id] = selected.value;
                     } else {
@@ -536,8 +530,11 @@
                 allAnswered = true;
             }
 
+            console.log("collectAnswer: allAnswered =", allAnswered, "answersForStep =", answersForStep);
+            
             const errorMsgElement = questionContainer ? questionContainer.querySelector('.error-message') : null;
             if (!allAnswered) {
+                console.log("collectAnswer: Not all questions answered, showing error");
                 if (!errorMsgElement && questionContainer) {
                     const errorMsg = document.createElement('p');
                     errorMsg.className = 'text-red-500 text-sm mt-4 error-message font-medium';
@@ -761,7 +758,24 @@
             resultsSummaryEl = document.getElementById('results-summary');
             recommendationsContainer = document.getElementById('recommendations-container');
 
-            if (!startBtn || !introductionSection || !questionnaireSection || !resultsSection || !questionContainer || !nextBtn || !prevBtn || !printBtn || !resetBtn || !progressBarContainer || !resultsSummaryEl || !recommendationsContainer) {
+            console.log("DOM Elements found:", {
+                startBtn: !!startBtn,
+                introductionSection: !!introductionSection,
+                questionnaireSection: !!questionnaireSection,
+                resultsSection: !!resultsSection,
+                questionContainer: !!questionContainer,
+                nextBtn: !!nextBtn,
+                prevBtn: !!prevBtn,
+                printBtn: !!printBtn,
+                resetBtn: !!resetBtn,
+                progressBarContainer: !!progressBarContainer,
+                progressBar: !!progressBar,
+                progressText: !!progressText,
+                resultsSummaryEl: !!resultsSummaryEl,
+                recommendationsContainer: !!recommendationsContainer
+            });
+
+            if (!startBtn || !introductionSection || !questionnaireSection || !resultsSection || !questionContainer || !nextBtn || !prevBtn || !printBtn || !resetBtn || !progressBarContainer || !progressBar || !progressText || !resultsSummaryEl || !recommendationsContainer) {
                 console.error("initializeApp: One or more critical DOM elements were not found. Assessment may not function correctly.");
                 const body = document.querySelector('body');
                 if (body && !body.querySelector('#init-error-msg')) {
@@ -778,10 +792,18 @@
                 return;
             }
             console.log("initializeApp: All DOM elements successfully found.");
+            
+            // Test that the button is clickable
+            if (startBtn) {
+                console.log("Start button element:", startBtn);
+                console.log("Start button is visible:", startBtn.offsetParent !== null);
+                console.log("Start button classList:", startBtn.classList.toString());
+            }
 
 
-            startBtn.addEventListener('click', () => {
+            startBtn.addEventListener('click', (e) => {
                 console.log("Start Assessment button clicked.");
+                e.preventDefault();
                 currentStepIndex = 0;
                 userAnswers = {};
                 introductionSection.classList.add('hidden');
